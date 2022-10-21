@@ -24,18 +24,22 @@
       </div>
       <!-- question -->
       <div class="mt-8">
-        <div
-          class="boxShadow option-default bg-gray-100 p-2 rounded-lg mb-3 relative"
-        >
+        <div v-for="(choice, item) in currentQuestion.choices" :key="item">
           <div
-            class="bg-yellow-400 p-1 transform rotate-45 rounded-md h-10 w-10 text-black font-bold absolute right-0 top-0 shadow-md"
+            class="boxShadow option-default bg-gray-100 p-2 rounded-lg mb-3 relative"
+            :ref="optionChosen"
+            @click="onOptionClicked(choice, item)"
           >
-            <p class="transform -rotate-45">+10</p>
-          </div>
-          <!-- correct result  +10 -->
-          <div class="rounded-lg font-bold flex p-2">
-            <div class="p-1 rounded-lg">0</div>
-            <div class="flex items-center pl-6">test</div>
+            <div
+              class="bg-yellow-400 p-1 transform rotate-45 rounded-md h-10 w-10 text-black font-bold absolute right-0 top-0 shadow-md"
+            >
+              <p class="transform -rotate-45">+10</p>
+            </div>
+            <!-- correct result  +10 -->
+            <div class="rounded-lg font-bold flex p-2">
+              <div class="p-1 rounded-lg">{{ item }}</div>
+              <div class="flex items-center pl-6">{{ choice }}</div>
+            </div>
           </div>
         </div>
       </div>
@@ -59,11 +63,12 @@
 </style>
 
 <script>
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 
 export default {
   setup() {
-    // let questionCounter = ref(0);
+    let isClick = true;
+    let questionCounter = ref(0);
     let score = ref(0);
     const currentQuestion = ref({
       question: "",
@@ -93,6 +98,21 @@ export default {
         ],
       },
     ];
+    const onStart = () => {
+      currentQuestion.value = questions[questionCounter.value];
+      console.log("currentQuestion", currentQuestion);
+    };
+    const loadQuestion = () => {
+      isClick = true;
+      if (questions.length > questionCounter.value) {
+        currentQuestion.value = questions[questionCounter.value];
+        console.log("Current questions", currentQuestion.value);
+        questionCounter.value++;
+        console.log("currentQuestion.choices", currentQuestion.value.choices);
+      } else {
+        console.log("Out of questions");
+      }
+    };
     let itemsRef = [];
     const optionChosen = (element) => {
       if (element) {
@@ -100,17 +120,34 @@ export default {
       }
     };
     const onOptionClicked = (choice, item) => {
-      // const divContainer = itemsRef[item];
-      const optionId = item + 1;
-      if (currentQuestion.value.answer === optionId) {
-        console.log("you are correct");
-        score.value += 10;
+      if (isClick) {
+        const divContainer = itemsRef[item];
+        const optionId = item + 1;
+        if (currentQuestion.value.answer === optionId) {
+          console.log("you are correct");
+          divContainer.classList.add("option-correct");
+          divContainer.classList.remove("option-default");
+          score.value += 10;
+        } else {
+          console.log("you are wrong");
+          divContainer.classList.add("option-wrong");
+          divContainer.classList.remove("option-default");
+        }
+        console.log("choice", choice);
+        console.log("item", item);
       } else {
-        console.log("you are wrong");
+        console.log("Out of questions");
       }
     };
+    onMounted(() => {
+      onStart();
+      loadQuestion();
+    });
     return {
       questions,
+      currentQuestion,
+      questionCounter,
+      onStart,
       optionChosen,
       onOptionClicked,
     };
